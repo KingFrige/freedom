@@ -32,7 +32,8 @@ SBT ?= java -jar $(rocketchip_dir)/sbt-launch.jar ++2.12.4
 
 # Build firrtl.jar and put it where chisel3 can find it.
 FIRRTL_JAR ?= $(rocketchip_dir)/firrtl/utils/bin/firrtl.jar
-FIRRTL ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -cp $(FIRRTL_JAR) firrtl.Driver
+# FIRRTL ?= java -Xmx2G -Xss8M -XX:MaxPermSize=256M -cp $(FIRRTL_JAR) firrtl.Driver
+FIRRTL ?= java -Xmx8G -Xss8M -XX:MaxPermSize=256M -cp $(FIRRTL_JAR) firrtl.Driver
 
 $(FIRRTL_JAR): $(shell find $(rocketchip_dir)/firrtl/src/main/scala -iname "*.scala")
 	$(MAKE) -C $(rocketchip_dir)/firrtl SBT="$(SBT)" root_dir=$(rocketchip_dir)/firrtl build-scala
@@ -53,8 +54,17 @@ firrtl: $(firrtl)
 
 # Build .v
 verilog := $(BUILD_DIR)/$(CONFIG_PROJECT).$(CONFIG).v
+topname := $(CONFIG_PROJECT).$(CONFIG)
 $(verilog): $(firrtl) $(FIRRTL_JAR)
-	$(FIRRTL) -i $(firrtl) -o $@ -X verilog
+	#$(FIRRTL) -i $(firrtl) -o $@ -X verilog	#original generate a huge single .v file
+	mkdir -p $(BUILD_DIR)/generated_vsrc/Design
+	$(FIRRTL) -i $(firrtl) -tn $(topname) -X verilog -fsm
+	touch $(CONFIG_PROJECT).$(CONFIG).F
+	ls *.v >  $(CONFIG_PROJECT).$(CONFIG).F
+	sed -i 's/^/generated_vsrc\/Design\//g' $(CONFIG_PROJECT).$(CONFIG).F
+	mv *.v $(BUILD_DIR)/generated_vsrc/Design
+	mv $(CONFIG_PROJECT).$(CONFIG).F $(BUILD_DIR)/generated_vsrc
+	cd $(BUILD_DIR); tar -zcf $(CONFIG_PROJECT).tar.gz generated_vsrc/
 ifneq ($(PATCHVERILOG),"")
 	$(PATCHVERILOG)
 endif
