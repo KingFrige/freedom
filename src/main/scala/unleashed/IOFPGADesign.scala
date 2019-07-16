@@ -65,16 +65,16 @@ class IOFPGADesign()(implicit p: Parameters) extends LazyModule with BindingScop
   val msimaster = LazyModule(new MSIMaster(Seq(MSITarget(address=0x2020000, spacing=4, number=10))))
   // We only support the first DDR or PCIe controller in this design
   val ddr = p(DDROverlayKey).headOption.map(_(DDROverlayParams(0x3000000000L, wrangler.node)))
-  val pcieControllers = p(PCIeOverlayKey).size
-  val lowBarSize = if (pcieControllers == 1) 0x20000000 else 0x10000000
-  val pcieAddrs = Seq(
-    (0x2c00000000L, Seq(AddressSet(0x2000000000L, 0x3ffffffffL), AddressSet(0x40000000, lowBarSize-1))),
-    (0x2d00000000L, Seq(AddressSet(0x2400000000L, 0x3ffffffffL), AddressSet(0x40000000+lowBarSize, lowBarSize-1))),
-    (0x2e00000000L, Seq(AddressSet(0x2400000000L, 0x3ffffffffL))))
-  val (pcie, pcieInt) = p(PCIeOverlayKey).zipWithIndex.map { case (overlay, i) =>
-    pcieAddrs(i) match { case (ecam, bars) => overlay(PCIeOverlayParams(wrangler.node, bars, ecam)) }
-  }.unzip
-  // We require ChipLink, though, obviously
+  // val pcieControllers = p(PCIeOverlayKey).size
+  // val lowBarSize = if (pcieControllers == 1) 0x20000000 else 0x10000000
+  // val pcieAddrs = Seq(
+  //   (0x2c00000000L, Seq(AddressSet(0x2000000000L, 0x3ffffffffL), AddressSet(0x40000000, lowBarSize-1))),
+  //   (0x2d00000000L, Seq(AddressSet(0x2400000000L, 0x3ffffffffL), AddressSet(0x40000000+lowBarSize, lowBarSize-1))),
+  //   (0x2e00000000L, Seq(AddressSet(0x2400000000L, 0x3ffffffffL))))
+  // val (pcie, pcieInt) = p(PCIeOverlayKey).zipWithIndex.map { case (overlay, i) =>
+  //   pcieAddrs(i) match { case (ecam, bars) => overlay(PCIeOverlayParams(wrangler.node, bars, ecam)) }
+  // }.unzip
+  // // We require ChipLink, though, obviously
   val link = p(ChipLinkOverlayKey).head(ChipLinkOverlayParams(
     params   = chiplinkparams,
     txGroup  = coreGroup,
@@ -86,7 +86,7 @@ class IOFPGADesign()(implicit p: Parameters) extends LazyModule with BindingScop
 
   // local master Xbar
   mbar.node := msimaster.masterNode
-  pcie.foreach { n => mbar.node := FlipRendering { implicit p => TLFIFOFixer() := n } }
+  // pcie.foreach { n => mbar.node := FlipRendering { implicit p => TLFIFOFixer() := n } }
 
   // Tap traffic for progress LEDs
   val iTap = TLIdentityNode()
@@ -118,10 +118,10 @@ class IOFPGADesign()(implicit p: Parameters) extends LazyModule with BindingScop
     sram.node := TLFragmenter(8, 64) := sbar.node
   }
   ddr.foreach { _ := sbar.node }
-  pcie.foreach { _ :*= TLWidthWidget(8) :*= sbar.node }
+  // pcie.foreach { _ :*= TLWidthWidget(8) :*= sbar.node }
 
   // interrupts are fed into chiplink via MSI
-  pcieInt.foreach { msimaster.intNode := _ }
+  // pcieInt.foreach { msimaster.intNode := _ }
 
   // Include optional NVDLA config
   val nvdla = p(NVDLAKey).map { config =>
@@ -133,13 +133,13 @@ class IOFPGADesign()(implicit p: Parameters) extends LazyModule with BindingScop
     FlipRendering { implicit p => mbar.node := TLFIFOFixer() } := TLWidthWidget(8) := nvdla.crossTLOut(nvdla.dbb_tl_node)
     // nvdla.crossTLIn(nvdla.cfg_axi4_slave := nvdla { TLFragmenter(4, 64) := TLWidthWidget(8) }) := sbar.node
 
-    val control: TLInwardNode =
-      (nvdla.cfg_axi4_slave
-        := AXI4Buffer()
-        := AXI4UserYanker(capMaxFlight = Some(2))
-        := TLToAXI4()
-        := nvdla { TLFragmenter(4, 64, holdFirstDeny = true):= TLWidthWidget(8) }) := sbar.node
-        // := TLFragmenter(4, p(CacheBlockBytes), holdFirstDeny = true))
+    // nvdla.crossTLIn(nvdla.cfg_axi4_slave
+    //     := AXI4Buffer()
+    //     := AXI4UserYanker(capMaxFlight = Some(2))
+    //     := TLToAXI4()
+    //     := TLFragmenter(4, 64, holdFirstDeny = true)
+    //     := TLWidthWidget(8)):= sbar.node
+    nvdla.crossTLIn(nvdla.cfg_axi4_slv) := sbar.node
 
 
     nvdla.crossTLIn(nvdla.cfg_tl_node := nvdla { TLFragmenter(4, 64) := TLWidthWidget(8) }) := sbar.node
