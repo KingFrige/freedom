@@ -11,6 +11,8 @@ import freechips.rocketchip.interrupts._
 import freechips.rocketchip.tilelink._
 import freechips.rocketchip.devices.tilelink._
 import freechips.rocketchip.util.{ElaborationArtefacts,ResetCatchAndSync}
+import freechips.rocketchip.amba.axi4._
+import freechips.rocketchip.subsystem.{CrossesToOnlyOneClockDomain, CacheBlockBytes}
 
 import sifive.blocks.devices.msi._
 import sifive.blocks.devices.chiplink._
@@ -129,6 +131,17 @@ class IOFPGADesign()(implicit p: Parameters) extends LazyModule with BindingScop
     dlaClock := wrangler.node := dlaGroup := corePLL
 
     FlipRendering { implicit p => mbar.node := TLFIFOFixer() } := TLWidthWidget(8) := nvdla.crossTLOut(nvdla.dbb_tl_node)
+    // nvdla.crossTLIn(nvdla.cfg_axi4_slave := nvdla { TLFragmenter(4, 64) := TLWidthWidget(8) }) := sbar.node
+
+    val control: TLInwardNode =
+      (nvdla.cfg_axi4_slave
+        := AXI4Buffer()
+        := AXI4UserYanker(capMaxFlight = Some(2))
+        := TLToAXI4()
+        := nvdla { TLFragmenter(4, 64, holdFirstDeny = true):= TLWidthWidget(8) }) := sbar.node
+        // := TLFragmenter(4, p(CacheBlockBytes), holdFirstDeny = true))
+
+
     nvdla.crossTLIn(nvdla.cfg_tl_node := nvdla { TLFragmenter(4, 64) := TLWidthWidget(8) }) := sbar.node
     msimaster.intNode := nvdla.crossIntOut(nvdla.int_node)
 
@@ -227,7 +240,7 @@ class With150MHz extends WithFrequency(150)
 class With200MHz extends WithFrequency(200)
 
 class WithNVDLA(config: String) extends Config((site, here, up) => {
-  case NVDLAKey => Some(NVDLAParams(config = config, raddress = 0x2f80000000L))
+  case NVDLAKey => Some(NVDLAParams(config = config, raddress_apb_slv = 0x2f80000000L, raddress_axi_slv = 0x2f90000000L))
 })
 
 class WithNVDLALarge extends WithNVDLA("large")
