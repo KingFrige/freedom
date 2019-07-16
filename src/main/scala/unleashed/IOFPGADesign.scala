@@ -131,15 +131,8 @@ class IOFPGADesign()(implicit p: Parameters) extends LazyModule with BindingScop
     dlaClock := wrangler.node := dlaGroup := corePLL
 
     FlipRendering { implicit p => mbar.node := TLFIFOFixer() } := TLWidthWidget(8) := nvdla.crossTLOut(nvdla.dbb_tl_node)
-    // nvdla.crossTLIn(nvdla.cfg_axi4_slave := nvdla { TLFragmenter(4, 64) := TLWidthWidget(8) }) := sbar.node
 
-    // nvdla.crossTLIn(nvdla.cfg_axi4_slave
-    //     := AXI4Buffer()
-    //     := AXI4UserYanker(capMaxFlight = Some(2))
-    //     := TLToAXI4()
-    //     := TLFragmenter(4, 64, holdFirstDeny = true)
-    //     := TLWidthWidget(8)):= sbar.node
-    nvdla.crossTLIn(nvdla.cfg_axi4_slv) := sbar.node
+    nvdla.crossTLIn(nvdla.cfg_tl2axi4slv_node) := sbar.node
 
 
     nvdla.crossTLIn(nvdla.cfg_tl_node := nvdla { TLFragmenter(4, 64) := TLWidthWidget(8) }) := sbar.node
