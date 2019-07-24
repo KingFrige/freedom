@@ -133,6 +133,8 @@ class IOFPGADesign()(implicit p: Parameters) extends LazyModule with BindingScop
     FlipRendering { implicit p => mbar.node := TLFIFOFixer() } := TLWidthWidget(8) := nvdla.crossTLOut(nvdla.dbb_tl_node)
 
     nvdla.crossTLIn(nvdla.cfg_tl2axi4slv_node) := sbar.node
+    // nvdla.crossTLIn(nvdla.cfg_tl2axi4slv_node) := TLFilter(filter) := TLBuffer() := mbar.node
+    // nvdla.cfg_tl2axi4slv_node := TLBuffer() := mbar.node
 
 
     nvdla.crossTLIn(nvdla.cfg_tl_node := nvdla { TLFragmenter(4, 64) := TLWidthWidget(8) }) := sbar.node
