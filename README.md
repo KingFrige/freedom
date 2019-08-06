@@ -1,126 +1,53 @@
 Freedom
 =======
 
-This repository contains the RTL created by SiFive for its Freedom E300 and U500
-platforms. The Freedom E310 Arty FPGA Dev Kit implements the Freedom E300
-Platform and is designed to be mapped onto an [Arty FPGA Evaluation
-Kit](https://www.xilinx.com/products/boards-and-kits/arty.html). The Freedom
-U500 VC707 FPGA Dev Kit implements the Freedom U500 Platform and is designed to
-be mapped onto a [VC707 FPGA Evaluation
-Kit](https://www.xilinx.com/products/boards-and-kits/ek-v7-vc707-g.html).
-Both systems boot autonomously and can be controlled via an external debugger.
-
 Run the following commands to clone the repository and get started:
 
 ```sh
-$ git clone https://github.com/sifive/freedom.git
+$ git clone git@github.com:KingFrige/freedom.git
 $ cd freedom
 
 #Run this command to update subrepositories used by freedom
 $ git submodule update --init --recursive
+
+$ git branch -r
+
+$ git ckeckout nvdla-fpga-error
+$ git pull origin nvdla-fpga-error
+
+$ make -f Makefile.vcu118-iofpga-nvdla verilog
 ```
 
-Next, read the section corresponding to the kit you are interested in for
-instructions on how to use this repo.
-
-Software Requirement
+Error show
 --------------------
-
-To compile the bootloaders for both Freedom E300 Arty and U500 VC707
-FPGA dev kits, the RISC-V software toolchain must be installed locally and
-set the $(RISCV) environment variable to point to the location of where the
-RISC-V toolchains are installed. You can build the toolchain from scratch
-or download the tools here: https://www.sifive.com/products/tools/
-
-After installing toolchain and vivado, you must set the environment variables.
-
-If you have installed toolchain to
-`/home/riscv/riscv64-elf-tc/bin/riscv64-unknown-elf-gcc`
-then run the following command. Do not include /bin at the end of the string.
-
-```sh
-$ export RISCV=/home/riscv/riscv64-elf-tc
 ```
+[info] [0.001] Elaborating design...
+mem AXI4-ID <= TL-Source mapping:
+	[ 0,  2) <= [128, 132) "MSI Master",
+	[ 2,  3) <= [  0,  32) "NVDLA DBB ID#0" [FIFO],
+	[ 3,  4) <= [ 32,  64) "NVDLA DBB ID#1" [FIFO],
+	[ 4,  5) <= [ 64,  96) "NVDLA DBB ID#2" [FIFO],
+	[ 5,  6) <= [ 96, 128) "NVDLA DBB ID#3" [FIFO],
+	[ 6,  7) <= [272, 288) "ChipLink Domain #1" [FIFO],
+	[ 7,  8) <= [288, 304) "ChipLink Domain #2" [FIFO],
+	[ 8,  9) <= [304, 320) "ChipLink Domain #3" [FIFO],
+	[ 9, 10) <= [320, 336) "ChipLink Domain #4" [FIFO],
+	[10, 11) <= [336, 352) "ChipLink Domain #5" [FIFO],
+	[11, 12) <= [352, 368) "ChipLink Domain #6" [FIFO],
+	[12, 13) <= [368, 384) "ChipLink Domain #7" [FIFO],
+	[13, 21) <= [256, 272) "ChipLink Domain #0" [CACHE]
 
-In order to run the `mcs` target in the next step, you need to have the `vivado`
-executable on your `PATH`.
-
-If vivado is installed to `/tools/Xilinx/Vivado/2016.4/bin`,
-you can set the `PATH` with the following command.
-```sh
-$ export PATH=${PATH}:/tools/Xilinx/Vivado/2016.4/bin
+[error] (run-main-0) java.lang.IllegalArgumentException: requirement failed: nvdla had fifoId Some(1), which was not homogeneous (List((serr,Some(0)), (dtbrom,Some(0)), (island,Some(0)), (nvdla,Some(0)), (nvdla,Some(1)))) 
+[error] java.lang.IllegalArgumentException: requirement failed: nvdla had fifoId Some(1), which was not homogeneous (List((serr,Some(0)), (dtbrom,Some(0)), (island,Some(0)), (nvdla,Some(0)), (nvdla,Some(1)))) 
+[error] 	at scala.Predef$.require(Predef.scala:277)
+[error] 	at freechips.rocketchip.tilelink.TLManagerPortParameters.$anonfun$requireFifo$1(Parameters.scala:97)
+[error] 	at freechips.rocketchip.tilelink.TLManagerPortParameters.$anonfun$requireFifo$1$adapted(Parameters.scala:96)
+[error] 	at scala.collection.immutable.List.foreach(List.scala:389)
+[error] 	at freechips.rocketchip.tilelink.TLManagerPortParameters.requireFifo(Parameters.scala:96)
+[error] 	at sifive.blocks.devices.chiplink.ChipLink$$anon$1.<init>(ChipLink.scala:106)
+[error] 	at sifive.blocks.devices.chiplink.ChipLink.module$lzycompute(ChipLink.scala:90)
+[error] 	at sifive.blocks.devices.chiplink.ChipLink.module(ChipLink.scala:90)
+[error] 	at sifive.blocks.devices.chiplink.ChipLink.module(ChipLink.scala:11)
+[error] 	at freechips.rocketchip.diplomacy.LazyModuleImpLike.$anonfun$instantiate$2(LazyModule.scala:158)
+[error] 	at chisel3.core.Module$.do_apply(Module.scala:49)
 ```
-Change the line above if the `vivado` is installed to
-`/opt/Xilinx/Vivado/2016.4/bin` accordingly.
-
-
-Freedom E300 Arty FPGA Dev Kit
-------------------------------
-
-The Freedom E300 Arty FPGA Dev Kit implements a Freedom E300 chip.
-
-### How to build
-
-The Makefile corresponding to the Freedom E300 Arty FPGA Dev Kit is
-`Makefile.e300artydevkit` and it consists of two main targets:
-
-- `verilog`: to compile the Chisel source files and generate the Verilog files.
-- `mcs`: to create a Configuration Memory File (.mcs) that can be programmed
-onto an Arty FPGA board.
-
-To execute these targets, you can run the following commands:
-
-```sh
-$ make -f Makefile.e300artydevkit verilog
-$ make -f Makefile.e300artydevkit mcs
-```
-
-Note: This flow requires Vivado 2017.1. Old versions are known to fail.
-
-These will place the files under `builds/e300artydevkit/obj`.
-
-
-### Bootrom
-
-The default bootrom consists of a program that immediately jumps to address
-0x20400000, which is 0x00400000 bytes into the SPI flash memory on the Arty
-board.
-
-### Using the generated MCS Image
-
-For instructions for getting the generated image onto an FPGA and programming it with software using the [Freedom E SDK](https://github.com/sifive/freedom-e-sdk), please see the [Freedom E310 Arty FPGA Dev Kit Getting Started Guide](https://www.sifive.com/documentation/freedom-soc/freedom-e300-arty-fpga-dev-kit-getting-started-guide/).
-
-Freedom U500 VC707 FPGA Dev Kit
--------------------------------
-
-The Freedom U500 VC707 FPGA Dev Kit implements the Freedom U500 platform.
-
-### How to build
-
-The Makefile corresponding to the Freedom U500 VC707 FPGA Dev Kit is
-`Makefile.vc707-u500devkit` and it consists of two main targets:
-
-- `verilog`: to compile the Chisel source files and generate the Verilog files.
-- `mcs`: to create a Configuration Memory File (.mcs) that can be programmed
-onto an VC707 FPGA board.
-
-To execute these targets, you can run the following commands:
-
-```sh
-$ make -f Makefile.vc707-u500devkit verilog
-$ make -f Makefile.vc707-u500devkit mcs
-```
-
-Note: This flow requires Vivado 2016.4. Newer versions are known to fail.
-
-These will place the files under `builds/vc707-u500devkit/obj`.
-
-### Bootrom
-
-The default bootrom consists of a bootloader that loads a program off the SD
-card slot on the VC707 board.
-
-### Linux boot Image
-
-The bootable Linux image for vc707 is able to build from the link
-[SD boot image](https://github.com/sifive/freedom-u-sdk).
