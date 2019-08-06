@@ -14,6 +14,7 @@ $ git branch -r
 
 $ git ckeckout nvdla-fpga-error
 $ git pull origin nvdla-fpga-error
+$ git submodule update
 
 $ make -f Makefile.vcu118-iofpga-nvdla verilog
 ```
