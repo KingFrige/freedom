@@ -13,6 +13,10 @@ $ git submodule update --init --recursive
 $ git branch -r
 
 $ git ckeckout nvdla-fpga-error
+
+$ git config submodule.nvidia-dla-blocks.url git@github.com:KingFrige/block-nvdla-sifive.git
+$ git submodule sync
+
 $ git pull origin nvdla-fpga-error
 $ git submodule update
 
