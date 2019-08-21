@@ -133,9 +133,11 @@ class IOFPGADesign()(implicit p: Parameters) extends LazyModule with BindingScop
     FlipRendering { implicit p => mbar.node := TLFIFOFixer() } := TLWidthWidget(8) := nvdla.crossTLOut(nvdla.dbb_tl_node)
 
 
+    //----------------------------------------------
     // nvdla.crossTLIn(nvdla.cfg_tl2axi4slv_node) := TLWidthWidget(256/8) := TLBuffer() := TLWidthWidget(4) := mbar.node
-    nvdla.crossTLIn(nvdla.cfg_tl2axi4slv_node := TLFragmenter(32, 64 , holdFirstDeny = true)  := TLWidthWidget(256/8) := TLBuffer() := TLWidthWidget(8)) := sbar.node
     // nvdla.crossTLIn(nvdla.cfg_tl2axi4slv_node) := TLWidthWidget(4) := xbar.node
+    nvdla.crossTLIn(nvdla.cfg_tl2ahbslv_node) := TLFragmenter(4, 64) := TLWidthWidget(8) := sbar.node
+    //----------------------------------------------
 
 
     nvdla.crossTLIn(nvdla.cfg_tl_node := nvdla { TLFragmenter(4, 64) := TLWidthWidget(8) }) := sbar.node
@@ -236,7 +238,7 @@ class With150MHz extends WithFrequency(150)
 class With200MHz extends WithFrequency(200)
 
 class WithNVDLA(config: String) extends Config((site, here, up) => {
-  case NVDLAKey => Some(NVDLAParams(config = config, raddress_apb_slv = 0x2f80000000L, raddress_axi_slv = 0x2f90000000L))
+  case NVDLAKey => Some(NVDLAParams(config = config, raddress_apb_slv = 0x2f80000000L, raddress_ahb_slv = 0x2f90000000L))
 })
 
 class WithNVDLALarge extends WithNVDLA("large")
