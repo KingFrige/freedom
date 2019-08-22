@@ -37,15 +37,25 @@ class IOFPGADesign()(implicit p: Parameters) extends LazyModule with BindingScop
   ElaborationArtefacts.add("dts", dts)
   ElaborationArtefacts.add("graphml", graphML)
 
+//   val chiplinkparams = ChipLinkParams(
+//         TLUH = AddressSet.misaligned(0,             0x40000000L),                   // U540 MMIO              [  0GB, 1GB)
+//         TLC =  AddressSet.misaligned(0x60000000L,   0x20000000L) ++                 // local memory behind L2 [1.5GB, 2GB)
+//                AddressSet.misaligned(0x80000000L,   0x2000000000L - 0x80000000L) ++ // U540 DDR               [  2GB, 128GB)
+//                AddressSet.misaligned(0x3000000000L, 0x1000000000L),                 // local memory behind L2 [192GB, 256GB)
+//         syncTX = true
+//   )
+// val localRoute = AddressSet.misaligned(0x40000000L, 0x20000000L) ++               // local MMIO             [  1GB, 1.5GB)
+//                  AddressSet.misaligned(0x2000000000L, 0x1000000000L)              // local MMIO             [128GB, 192GB)
+
   val chiplinkparams = ChipLinkParams(
-        TLUH = AddressSet.misaligned(0,             0x40000000L),                   // U540 MMIO              [  0GB, 1GB)
-        TLC =  AddressSet.misaligned(0x60000000L,   0x20000000L) ++                 // local memory behind L2 [1.5GB, 2GB)
-               AddressSet.misaligned(0x80000000L,   0x2000000000L - 0x80000000L) ++ // U540 DDR               [  2GB, 128GB)
-               AddressSet.misaligned(0x3000000000L, 0x1000000000L),                 // local memory behind L2 [192GB, 256GB)
-        syncTX = true
+    TLUH = AddressSet.misaligned(0x40000000L,   0x60000000L) ++        // U540 MMIO              [  0GB, 1GB)
+           AddressSet.misaligned(0x2000000000L, 0x3000000000L),         // U540 DDR               [  2GB, 128GB)
+    TLC =  AddressSet.misaligned(0x60000000L,   0x80000000L) ++                 // local memory behind L2 [1.5GB, 2GB)
+           AddressSet.misaligned(0x3000000000L, 0x4000000000L),                 // local memory behind L2 [192GB, 256GB)
+    syncTX = true
   )
-  val localRoute = AddressSet.misaligned(0x40000000L, 0x20000000L) ++               // local MMIO             [  1GB, 1.5GB)
-                   AddressSet.misaligned(0x2000000000L, 0x1000000000L)              // local MMIO             [128GB, 192GB)
+  val localRoute = AddressSet.misaligned(0x60000000L,   0x80000000L) ++               // local MMIO             [  1GB, 1.5GB)
+                   AddressSet.misaligned(0x3000000000L, 0x1000000000L)              // local MMIO             [128GB, 192GB)
 
   // Core clocking
   val sysClock  = p(ClockInputOverlayKey).head(ClockInputOverlayParams())
@@ -114,7 +124,7 @@ class IOFPGADesign()(implicit p: Parameters) extends LazyModule with BindingScop
   serr.node := sbar.node
   dtbrom.node := TLFragmenter(8, 64) := sbar.node
   if (ddr.isEmpty) {
-    val sram = LazyModule(new TLRAM(AddressSet(0x2f90000000L, 0xfff), beatBytes = 8))
+    val sram = LazyModule(new TLRAM(AddressSet(0x3f90000000L, 0xfff), beatBytes = 8))
     sram.node := TLFragmenter(8, 64) := sbar.node
   }
   ddr.foreach { _ := sbar.node }
@@ -236,7 +246,7 @@ class With150MHz extends WithFrequency(150)
 class With200MHz extends WithFrequency(200)
 
 class WithNVDLA(config: String) extends Config((site, here, up) => {
-  case NVDLAKey => Some(NVDLAParams(config = config, raddress_apb_slv = 0x2f80000000L, raddress_axi_slv = 0x2f90000000L))
+  case NVDLAKey => Some(NVDLAParams(config = config, raddress_apb_slv = 0x3f80000000L, raddress_axi_slv = 0x3f90000000L))
 })
 
 class WithNVDLALarge extends WithNVDLA("large")
