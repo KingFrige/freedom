@@ -136,7 +136,8 @@ class IOFPGADesign()(implicit p: Parameters) extends LazyModule with BindingScop
     //----------------------------------------------
     // nvdla.crossTLIn(nvdla.cfg_tl2axi4slv_node) := TLWidthWidget(256/8) := TLBuffer() := TLWidthWidget(4) := mbar.node
     // nvdla.crossTLIn(nvdla.cfg_tl2axi4slv_node) := TLWidthWidget(4) := xbar.node
-    nvdla.crossTLIn(nvdla.cfg_tl2ahbslv_node) := TLFragmenter(4, 64) := TLWidthWidget(8) := sbar.node
+    // nvdla.crossTLIn(nvdla.cfg_tl2ahbslv_node) := TLFragmenter(4, 64) := TLWidthWidget(8) := sbar.node
+    nvdla.crossTLIn(nvdla.cfg_tl2ahbslv_node) := TLWidthWidget(4) := TLBuffer() := TLWidthWidget(8) := sbar.node
     //----------------------------------------------
 
 
