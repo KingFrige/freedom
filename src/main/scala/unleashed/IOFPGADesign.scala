@@ -48,10 +48,10 @@ class IOFPGADesign()(implicit p: Parameters) extends LazyModule with BindingScop
 //                  AddressSet.misaligned(0x2000000000L, 0x1000000000L)              // local MMIO             [128GB, 192GB)
   val chiplinkparams = ChipLinkParams(
         TLUH = AddressSet.misaligned(0,             0x40000000L) ++                   // U74 MMIO              [  0GB, 1GB)
-               AddressSet.misaligned(0x1000000000L, 0x800000000L), // U740 DDR               [  64GB, 96GB)
-        TLC =  AddressSet.misaligned(0x60000000L,   0x20000000L) ++                 // local memory behind L2 [1.5GB, 2GB)
-               AddressSet.misaligned(0x80000000L,   0x800000000L) ++  // U740 DDR               [  2GB, 34GB)
-               AddressSet.misaligned(0x3000000000L, 0x1000000000L),                 // local memory behind L2 [192GB, 256GB)
+               AddressSet.misaligned(0x1000000000L, 0x800000000L),                    // U740 DDR               [  64GB, 96GB)
+        TLC =  AddressSet.misaligned(0x60000000L,   0x20000000L) ++                   // local memory behind L2 [1.5GB, 2GB)
+               AddressSet.misaligned(0x80000000L,   0x800000000L) ++                  // U740 DDR               [  2GB, 34GB)
+               AddressSet.misaligned(0x3000000000L, 0x1000000000L),                   // local memory behind L2 [192GB, 256GB)
         syncTX = true
   )
   val localRoute = AddressSet.misaligned(0x40000000L, 0x20000000L) ++               // local MMIO             [  1GB, 1.5GB)
